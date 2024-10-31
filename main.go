@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -60,7 +61,12 @@ func SaveConfig(configFile string, config *Config) error {
 
 // Execute 执行一个 shell 命令并返回其输出
 func Execute(command string, args ...string) (string, error) {
+	if command == "docker" && len(args) > 0 && args[0] == "pull" && runtime.GOOS == "darwin" {
+		args = append(args[:1], append([]string{"--platform", "linux/amd64"}, args[1:]...)...)
+	}
+	fmt.Println("------>", command, strings.Join(args, " "))
 	cmd := exec.Command(command, args...)
+
 	output, err := cmd.CombinedOutput()
 	return string(output), err
 }
