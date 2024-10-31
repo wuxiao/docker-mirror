@@ -15,12 +15,12 @@ import (
 
 // Config 结构体用于保存配置
 type Config struct {
-	Harbor struct {
+	Registry struct {
 		Domain   string `yaml:"domain"`
 		Username string `yaml:"username"`
 		Password string `yaml:"password"`
 		Project  string `yaml:"project"`
-	} `yaml:"harbor"`
+	} `yaml:"registry"`
 	DockerRegistries []string `yaml:"dockerRegistries"`
 }
 
@@ -77,13 +77,9 @@ func Prompt(prompt string) string {
 func Configure(configFile string) error {
 	config := &Config{}
 
-	config.Harbor.Domain = Prompt("请输入 Harbor 域名: ")
-	config.Harbor.Username = Prompt("请输入 Harbor 用户名: ")
-	config.Harbor.Password = Prompt("请输入 Harbor 密码: ")
-	config.Harbor.Project = Prompt("请输入 Harbor 项目 (默认为 public): ")
-	if config.Harbor.Project == "" {
-		config.Harbor.Project = "public"
-	}
+	config.Registry.Domain = Prompt("请输入 registry 域名: ")
+	config.Registry.Username = Prompt("请输入 registry 用户名: ")
+	config.Registry.Password = Prompt("请输入 registry 密码: ")
 
 	// 预设 DockerRegistries 的默认值
 	config.DockerRegistries = []string{
@@ -104,10 +100,10 @@ func PrintHelp() {
 	fmt.Println("")
 	fmt.Println("  config       初始化配置")
 	fmt.Println("")
-	fmt.Println("  pull         拉取镜像到本地，并推送到 Harbor 仓库")
+	fmt.Println("  pull         拉取镜像到本地，并推送到 registry 仓库")
 	fmt.Println("               注意: 请不要在镜像名称中添加域名")
 	fmt.Println("")
-	fmt.Println("  pull-local   仅拉取镜像到本地，不推送到 Harbor 仓库")
+	fmt.Println("  pull-local   仅拉取镜像到本地，不推送到 registry 仓库")
 	fmt.Println("               注意: 请不要在镜像名称中添加域名")
 	fmt.Println("")
 	fmt.Println("  help         显示帮助信息")
@@ -149,7 +145,7 @@ func main() {
 			part = append([]string{"library"}, part[0])
 		}
 
-		targetImage := fmt.Sprintf("%s/%s/%s", config.Harbor.Domain, config.Harbor.Project, part[len(part)-1])
+		targetImage := fmt.Sprintf("%s/%s", config.Registry.Domain, part[len(part)-1])
 
 		var pullErr error
 		var pulledRegistry string
@@ -191,13 +187,13 @@ func main() {
 			log.Fatalf("标记镜像出错: %v\n%s", err, output)
 		}
 
-		// 登录到 Harbor 仓库
-		fmt.Printf("正在登录到 Harbor 仓库 %s\n", config.Harbor.Domain)
-		if output, err := Execute("docker", "login", config.Harbor.Domain, "-u", config.Harbor.Username, "-p", config.Harbor.Password); err != nil {
-			log.Fatalf("登录 Harbor 出错: %v\n%s", err, output)
+		// 登录到 registry 仓库
+		fmt.Printf("正在登录到 registry 仓库 %s\n", config.Registry.Domain)
+		if output, err := Execute("docker", "login", config.Registry.Domain, "-u", config.Registry.Username, "-p", config.Registry.Password); err != nil {
+			log.Fatalf("登录 registry 出错: %v\n%s", err, output)
 		}
 
-		// 推送镜像到 Harbor 仓库
+		// 推送镜像到 registry 仓库
 		fmt.Printf("正在推送镜像 %s\n", targetImage)
 		if output, err := Execute("docker", "push", targetImage); err != nil {
 			log.Fatalf("推送镜像出错: %v\n%s", err, output)
