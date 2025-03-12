@@ -150,8 +150,9 @@ func main() {
 		if len(part) == 1 {
 			part = append([]string{"library"}, part[0])
 		}
-
-		targetImage := fmt.Sprintf("%s/%s", config.Registry.Domain, part[len(part)-1])
+		//docker.m.daocloud.io/grafana/promtail:3.4 标记为 docker-apaas.shuyun.com/promtail:3.4
+		parts := strings.SplitN(image, "/", 2)
+		targetImage := fmt.Sprintf("%s/%s", config.Registry.Domain, parts[1])
 
 		var pullErr error
 		var pulledRegistry string
